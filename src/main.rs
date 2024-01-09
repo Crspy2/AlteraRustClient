@@ -3,14 +3,13 @@ use std::{env, fmt::Debug, sync::Arc};
 use futures::StreamExt;
 use sms::SmsClient;
 use sparkle_convenience::Bot;
-use twilight_gateway::{EventTypeFlags, stream::ShardEventStream, error::ReceiveMessageErrorType};
+use twilight_gateway::{error::ReceiveMessageErrorType, stream::ShardEventStream, EventTypeFlags};
 use twilight_http as _;
 use twilight_model::{
     application::interaction::Interaction,
     gateway::{event::Event, Intents},
 };
 
-mod utils;
 mod interaction;
 mod sms;
 
@@ -21,9 +20,17 @@ pub enum Error {
 }
 
 #[derive(Debug)]
+struct Config {
+    debug_scope: u64,
+    success_color: u32,
+    error_color: u32,
+}
+
+#[derive(Debug)]
 struct Context {
     bot: Bot,
-    sms: SmsClient
+    config: Config,
+    sms: SmsClient,
 }
 
 impl Context {
@@ -40,16 +47,35 @@ async fn main() -> Result<(), anyhow::Error> {
     dotenvy::dotenv()?;
     tracing_subscriber::fmt().pretty().init();
 
+    // let sms = SmsClient::new(env::var("API_KEY")?);
+
+    // let test_val = sms.get_api_balance().await;
+
+    // match test_val {
+    //     Ok(val) => println!("{}", val),
+    //     Err(err) => println!("{:#?}", err),
+    // }
+
+
+    // Ok(())
+
     let (bot, mut shards) = Bot::new(
         env::var("DISCORD_TOKEN")?,
         Intents::empty(),
         EventTypeFlags::INTERACTION_CREATE,
-    ).await?;
+    )
+    .await?;
 
     tracing::info!("Connected as {}", bot.user.name);
+    
+    let config = Config {
+        debug_scope: env::var("DEBUG_SCOPE")?.parse().unwrap(),
+        success_color: 0x65C97A,
+        error_color: 0xE85041,
+    };
     let sms = SmsClient::new(env::var("API_KEY")?);
 
-    let ctx = Arc::new(Context { bot, sms });
+    let ctx = Arc::new(Context { bot, sms, config });
 
     ctx.create_commands().await.unwrap_or_else(|err| {
         tracing::error!("Failed to create commands: {}", err);

@@ -1,11 +1,6 @@
-use std::env;
-
 use sparkle_convenience::{
     error::IntoError,
-    interaction::{
-        extract::InteractionExt,
-        InteractionHandle,
-    },
+    interaction::{extract::InteractionExt, InteractionHandle},
 };
 use twilight_interactions::command::CreateCommand;
 use twilight_model::{application::interaction::Interaction, id::Id};
@@ -13,7 +8,6 @@ use twilight_model::{application::interaction::Interaction, id::Id};
 use crate::{Context, Error};
 
 mod adminbal;
-mod get_countries;
 
 #[derive(Debug)]
 struct InteractionContext<'ctx> {
@@ -26,7 +20,6 @@ impl<'ctx> InteractionContext<'ctx> {
     async fn handle(self) -> Result<(), anyhow::Error> {
         match self.interaction.name().ok()? {
             adminbal::Command::NAME => self.handle_adminbal_command().await,
-            get_countries::Command::NAME => self.handle_get_countries_command().await,
             _ => Err(Error::UnknownInteraction(self.interaction).into()),
         }
     }
@@ -36,12 +29,14 @@ impl Context {
     pub async fn create_commands(&self) -> Result<(), anyhow::Error> {
         let commands = [
             adminbal::Command::create_command().into(),
-            get_countries::Command::create_command().into(),
         ];
 
         self.bot
             .interaction_client()
-            .set_guild_commands(Id::new(env::var("DEBUG_SCOPE")?.parse().unwrap()),&commands)
+            .set_guild_commands(
+                Id::new(self.config.debug_scope),
+                &commands,
+            )
             .await?;
         tracing::info!("Created guild commands");
         Ok(())
