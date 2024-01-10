@@ -12,9 +12,8 @@ pub struct ServiceResponse {
 
 impl SmsClient {
     pub async fn get_service_list(self) -> Result<Vec<ServiceResponse>, ApiResponseError> {
-        let client = reqwest::Client::new();
-
-        let request = client
+        let request = self
+            .client
             .post(format!("{}/service/retrieve_all", API_URL))
             .send()
             .await
