@@ -22,6 +22,7 @@ pub enum Error {
 #[derive(Debug)]
 struct Config {
     debug_scope: u64,
+    price_multiplier: i8,
     success_color: u32,
     error_color: u32,
 }
@@ -47,64 +48,69 @@ async fn main() -> Result<(), anyhow::Error> {
     dotenvy::dotenv()?;
     tracing_subscriber::fmt().pretty().init();
 
-    // let sms = SmsClient::new(env::var("API_KEY")?);
-
-    // let test_val = sms.get_api_balance().await;
-
-    // match test_val {
-    //     Ok(val) => println!("{}", val),
-    //     Err(err) => println!("{:#?}", err),
-    // }
-
-
-    // Ok(())
-
-    let (bot, mut shards) = Bot::new(
-        env::var("DISCORD_TOKEN")?,
-        Intents::empty(),
-        EventTypeFlags::INTERACTION_CREATE,
-    )
-    .await?;
-
-    tracing::info!("Connected as {}", bot.user.name);
-    
-    let config = Config {
-        debug_scope: env::var("DEBUG_SCOPE")?.parse().unwrap(),
-        success_color: 0x65C97A,
-        error_color: 0xE85041,
-    };
     let sms = SmsClient::new(env::var("API_KEY")?);
 
-    let ctx = Arc::new(Context { bot, sms, config });
+    let test_val = sms.create_sms_order("ubisoft", "gb").await;
 
-    ctx.create_commands().await.unwrap_or_else(|err| {
-        tracing::error!("Failed to create commands: {}", err);
-    });
-
-    let mut events = ShardEventStream::new(shards.iter_mut());
-    while let Some((_, event_res)) = events.next().await {
-        let ctx_event_ref = Arc::clone(&ctx);
-        match event_res {
-            Ok(event) => {
-                tokio::spawn(async move {
-                    ctx_event_ref.handle_event(event).await;
-                });
-            }
-            Err(err)
-                if !matches!(
-                    err.kind(),
-                    ReceiveMessageErrorType::Deserializing { .. } | ReceiveMessageErrorType::Io
-                ) =>
-            {
-                ctx_event_ref.bot.log(&err).await;
-
-                if err.is_fatal() {
-                    break;
-                }
-            }
-            Err(_) => {}
-        };
+    match test_val {
+        Ok(val) => {
+            println!("{:#?}", val);
+            // let sms_info = sms.get_sms_code(val.order_id.as_str()).await;
+            //
+            // match sms_info {
+            //     Ok(sms) => println!("{:#?}", sms),
+            //     Err(err) => println!("{:#?}", err),
+            // }
+        }
+        Err(err) => println!("{:#?}", err),
     }
+
+    // let (bot, mut shards) = Bot::new(
+    //     env::var("DISCORD_TOKEN")?,
+    //     Intents::empty(),
+    //     EventTypeFlags::INTERACTION_CREATE,
+    // )
+    // .await?;
+    //
+    // tracing::info!("Connected as {}", bot.user.name);
+    //
+    // let config = Config {
+    //     debug_scope: env::var("DEBUG_SCOPE")?.parse().unwrap(),
+    //     success_color: 0x65C97A,
+    //     error_color: 0xE85041,
+    // };
+    // let sms = SmsClient::new(env::var("API_KEY")?);
+
+    // let ctx = Arc::new(Context { bot, sms, config });
+    //
+    // ctx.create_commands().await.unwrap_or_else(|err| {
+    //     tracing::error!("Failed to create commands: {}", err);
+    // });
+    //
+    // let mut events = ShardEventStream::new(shards.iter_mut());
+    // while let Some((_, event_res)) = events.next().await {
+    //     let ctx_event_ref = Arc::clone(&ctx);
+    //     match event_res {
+    //         Ok(event) => {
+    //             tokio::spawn(async move {
+    //                 ctx_event_ref.handle_event(event).await;
+    //             });
+    //         }
+    //         Err(err)
+    //             if !matches!(
+    //                 err.kind(),
+    //                 ReceiveMessageErrorType::Deserializing { .. } | ReceiveMessageErrorType::Io
+    //             ) =>
+    //         {
+    //             ctx_event_ref.bot.log(&err).await;
+    //
+    //             if err.is_fatal() {
+    //                 break;
+    //             }
+    //         }
+    //         Err(_) => {}
+    //     };
+    // }
 
     Ok(())
 }

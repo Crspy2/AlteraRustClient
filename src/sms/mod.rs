@@ -1,0 +1,52 @@
+use serde::{Deserialize, Deserializer, Serialize};
+use std::str::FromStr;
+
+pub mod create_sms_order;
+pub mod get_api_balance;
+pub mod get_country_prices;
+pub mod get_service_list;
+pub mod get_sms_code;
+
+const API_URL: &str = "https://api.smspool.net";
+
+#[derive(Debug, Clone)]
+
+pub struct SmsClient {
+    client: reqwest::Client,
+    api_key: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ApiErrorInfo {
+    pub message: String,
+    pub param: String,
+    pub description: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ApiResponseError {
+    pub success: i8,
+    pub errors: Vec<ApiErrorInfo>,
+}
+
+impl SmsClient {
+    pub fn new(api_key: String) -> Self {
+        let client = reqwest::Client::new();
+        return Self { client, api_key };
+    }
+}
+
+fn deserialize_float<'de, D>(deserializer: D) -> Result<f32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: String = Deserialize::deserialize(deserializer)?;
+    f32::from_str(&s).map_err(serde::de::Error::custom)
+}
+
+fn deserialize_int<'de, D>(deserializer: D) -> Result<i16, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: String = Deserialize::deserialize(deserializer)?;
+    i16::from_str(&s).map_err(serde::de::Error::custom)
+}
