@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::str::FromStr;
+use std::time::Duration;
 
 pub mod create_sms_order;
 pub mod get_api_balance;
@@ -30,7 +31,10 @@ pub struct ApiResponseError {
 
 impl SmsClient {
     pub fn new(api_key: String) -> Self {
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .unwrap();
         return Self { client, api_key };
     }
 }
