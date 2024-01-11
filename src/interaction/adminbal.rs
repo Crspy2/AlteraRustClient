@@ -6,7 +6,7 @@ use super::InteractionContext;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "adminbal", desc = "Get the total bot balance")]
-pub struct Command;
+pub struct AdminBalCommand;
 
 impl InteractionContext<'_> {
     pub async fn handle_adminbal_command(self) -> Result<(), anyhow::Error> {
@@ -15,12 +15,12 @@ impl InteractionContext<'_> {
             Ok(balance) => {
                 let embed = EmbedBuilder::new()
                     .title("Success")
-                    .description(format!("Your api balance is: ${:.2}", balance))
+                    .description(format!("The total balance of the bot is `${:.2}`", balance))
                     .color(self.ctx.config.success_color)
                     .validate()?
                     .build();
                 self.handle
-                    .reply(Reply::new().content("Helped").embed(embed))
+                    .reply(Reply::new().embed(embed).ephemeral())
                     .await?;
             }
             Err(err) => {
@@ -33,7 +33,6 @@ impl InteractionContext<'_> {
                 self.handle
                     .reply(Reply::new().embed(embed).ephemeral())
                     .await?;
-                return Err(anyhow::anyhow!("Error"));
             }
         }
         Ok(())

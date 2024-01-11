@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{ApiResponseError, SmsClient, API_URL};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ServiceResponse {
     #[serde(rename = "ID")]
     pub id: i16,

@@ -6,7 +6,8 @@ use super::{deserialize_float, SmsClient, API_URL};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SmsOrderInfo {
-    pub cc: String,
+    #[serde(rename = "cc")]
+    pub area_code: String,
     #[serde(deserialize_with = "deserialize_float")]
     pub cost: f32,
     pub country: String,
