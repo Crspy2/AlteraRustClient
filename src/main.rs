@@ -22,7 +22,7 @@ pub enum Error {
 #[derive(Debug)]
 struct Config {
     debug_scope: u64,
-    price_multiplier: i8,
+    price_multiplier: f32,
     success_color: u32,
     error_color: u32,
 }
@@ -61,7 +61,7 @@ async fn main() -> Result<(), anyhow::Error> {
         debug_scope: env::var("DEBUG_SCOPE")?.parse().unwrap(),
         success_color: 0x65C97A,
         error_color: 0xE85041,
-        price_multiplier: 10,
+        price_multiplier: 10.0,
     };
     let sms = SmsClient::new(env::var("API_KEY")?);
 

@@ -179,9 +179,18 @@ pub fn find_similar_services(
         if is_service_blacklisted(&service.name) {
             continue;
         }
-        let similarity_score = fuzz::ratio(desired_service, &service.name);
+        let similarity_score = fuzz::ratio(
+            &desired_service.to_lowercase(),
+            &service.name.to_lowercase(),
+        );
 
-        if similarity_score >= 55 {
+        if similarity_score == 100 {
+            similar_services = vec![SimilarServiceInfo {
+                service_info: service.clone(),
+                similarity_score,
+            }];
+            return similar_services;
+        } else if similarity_score >= 55 {
             similar_services.append(&mut vec![SimilarServiceInfo {
                 service_info: service.clone(),
                 similarity_score,
@@ -197,27 +206,31 @@ pub fn find_similar_services(
     return similar_services;
 }
 
-pub struct SimilarCountryInfo<'a> {
-    pub country_info: &'a CountryPriceInfo,
+pub struct SimilarCountryInfo {
+    pub country_info: CountryPriceInfo,
     pub similarity_score: u8,
 }
 
-pub fn find_similar_countries<'a>(
-    desired_country: &'a str,
-    total_countries: &'a Vec<CountryPriceInfo>,
-) -> Vec<SimilarCountryInfo<'a>> {
+pub fn find_similar_countries(
+    desired_country: &str,
+    total_countries: &Vec<CountryPriceInfo>,
+) -> Vec<SimilarCountryInfo> {
     let mut similar_countries: Vec<SimilarCountryInfo> = vec![];
     let mut similarity_score: u8;
     for country in total_countries {
         if desired_country.len() <= 3 {
-            similarity_score = fuzz::ratio(desired_country, &country.iso);
+            similarity_score =
+                fuzz::ratio(&desired_country.to_lowercase(), &country.iso.to_lowercase());
         } else {
-            similarity_score = fuzz::ratio(desired_country, &country.name);
+            similarity_score = fuzz::ratio(
+                &desired_country.to_lowercase(),
+                &country.name.to_lowercase(),
+            );
         }
 
         if similarity_score >= 55 {
             similar_countries.append(&mut vec![SimilarCountryInfo {
-                country_info: country,
+                country_info: country.clone(),
                 similarity_score,
             }]);
         }

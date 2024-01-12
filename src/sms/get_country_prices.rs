@@ -1,26 +1,22 @@
 use serde::{Deserialize, Serialize};
 
-use super::{
-    deserialize_float, deserialize_int, ApiErrorInfo, ApiResponseError, SmsClient, API_URL,
-};
+use super::{deserialize_float, ApiErrorInfo, ApiResponseError, SmsClient, API_URL};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CountryPriceInfo {
-    pub country: i32,
-    #[serde(deserialize_with = "deserialize_int")]
-    pub success_rate: i16,
-    #[serde(deserialize_with = "deserialize_float")]
-    pub price: f32,
-    #[serde(deserialize_with = "deserialize_float")]
-    pub low_price: f32,
     pub country_id: i32,
     pub name: String,
     #[serde(rename = "short_name")]
     pub iso: String,
+    #[serde(deserialize_with = "deserialize_float")]
+    pub price: f32,
+    #[serde(deserialize_with = "deserialize_float")]
+    pub low_price: f32,
+    pub success_rate: i32,
 }
 
 impl SmsClient {
-    pub async fn get_service_prices(
+    pub async fn get_country_prices(
         self,
         service: &str,
     ) -> Result<Vec<CountryPriceInfo>, ApiResponseError> {
@@ -34,6 +30,7 @@ impl SmsClient {
 
         if request.status() == 200 {
             let service_info = request.json::<Vec<CountryPriceInfo>>().await;
+            // let service_info = request.json::<Value>().await;
             match service_info {
                 Ok(services) => Ok(services),
                 Err(err) => Err(ApiResponseError {
