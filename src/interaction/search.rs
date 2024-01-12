@@ -333,7 +333,7 @@ impl PricesCommand {
                 for info in country_prices.iter().take(25) {
                     // price_embed = price_embed.clone().field(
                     //     EmbedFieldBuilder::new(format!("{}  :flag_{}:", info.name, info.iso.to_lowercase()), format!("`${:.2}`", info.low_price * ictx.ctx.config.price_multiplier));
-                    price_embed = price_embed.clone().field(EmbedFieldBuilder::new(format!("{}  :flag_{}:", info.name, info.iso.to_lowercase()), format!("`${:.2}`", info.low_price)).inline());
+                    price_embed = price_embed.clone().field(EmbedFieldBuilder::new(format!("{}  :flag_{}:", info.name, info.iso.to_lowercase()), format!("`${:.2}` | `{}%` success rate", info.low_price * ictx.ctx.config.price_multiplier, info.success_rate )).inline());
                 }
 
                 ictx.handle
