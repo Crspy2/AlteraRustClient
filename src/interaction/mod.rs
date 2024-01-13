@@ -9,6 +9,7 @@ use twilight_model::{application::interaction::Interaction, id::Id};
 use crate::{Context, Error};
 
 mod adminbal;
+mod balance;
 mod search;
 mod userdata;
 
@@ -25,6 +26,7 @@ impl<'ctx> InteractionContext<'ctx> {
 
         match self.interaction.name().ok()? {
             adminbal::AdminBalCommand::NAME => self.handle_adminbal_command().await,
+            balance::BalanceCommand::NAME => self.handle_balance_command().await,
             search::SearchCommand::NAME => self.handle_search_command().await,
             userdata::UserDataCommand::NAME => self.handle_user_data_command().await,
             _ => Err(Error::UnknownInteraction(self.interaction).into()),
@@ -36,6 +38,7 @@ impl Context {
     pub async fn create_commands(&self) -> Result<(), anyhow::Error> {
         let commands = [
             adminbal::AdminBalCommand::create_command().into(),
+            balance::BalanceCommand::create_command().into(),
             search::SearchCommand::create_command().into(),
             userdata::UserDataCommand::create_command().into(),
         ];
