@@ -359,7 +359,7 @@ impl PricesCommand {
                         format!("Here are the `{}` cheapest countries that are supported by the **{}** service.",
                             if country_prices.len() >= 25 { 25 } else { country_prices.len() }, 
                             service
-                        ) + "All countries supported are formatted the following way: ```\n{country_name}  {country_flag}\n{country_price} | {country_success_rate}\n```"
+                        ) + " Country information is displayed in the following format: `{price} | {success_rate}`"
                     );
 
                 for info in country_prices.iter().take(25) {
