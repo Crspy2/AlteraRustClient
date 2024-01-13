@@ -67,7 +67,7 @@ impl ServicesCommand {
                 .reply(Reply::new().embed(blacklisted_service_embed).ephemeral())
                 .await?;
 
-            return Err(anyhow!("Blacklisted service"));
+            return Ok(()); 
         }
 
         let sms_services = ictx.ctx.sms.clone().get_service_list().await;
@@ -84,8 +84,8 @@ impl ServicesCommand {
                 ictx.handle
                     .reply(Reply::new().embed(request_error_embed).ephemeral())
                     .await?;
-
-                return Err(anyhow!(error.errors.into_iter().nth(0).unwrap().message));
+                
+                tracing::error!("{}", error.errors.into_iter().nth(0).unwrap().message);  
             }
             Ok(services) => {
                 let similar_services = find_similar_services(&service, &services);
@@ -104,7 +104,8 @@ impl ServicesCommand {
                     ictx.handle
                         .reply(Reply::new().embed(no_similar_embed).ephemeral())
                         .await?;
-                    return Err(anyhow!("No similar services"));
+
+                    return Ok(())
                 }
 
                 let mut embed_desc = format!(
@@ -134,10 +135,10 @@ impl ServicesCommand {
                 ictx.handle
                     .reply(Reply::new().embed(services_embed))
                     .await?;
-
-                return Ok(());
             }
         };
+
+        Ok(())
     }
 }
 
@@ -195,7 +196,6 @@ impl PricesCommand {
                         other => other,
                     }.unwrap()
                 });
-                // country_prices.sort_by(|a, b| b.success_rate.partial_cmp(&a.success_rate).unwrap());
             }
         } 
 
@@ -213,8 +213,9 @@ impl PricesCommand {
                 ictx.handle
                     .reply(Reply::new().embed(request_error_embed).ephemeral())
                     .await?;
-
-                return Err(anyhow!("Empty array response"));
+                
+                tracing::error!("Unable to obtain service list");
+                return Ok(())
             }
 
             let similar_services = find_similar_services(service.as_str(), &sms_services);
@@ -233,7 +234,8 @@ impl PricesCommand {
                 ictx.handle
                     .reply(Reply::new().embed(no_services_embed).ephemeral())
                     .await?;
-                return Err(anyhow!("no similar services"));
+
+                return Ok(())
             }
 
             let mut embed_desc =
@@ -263,7 +265,11 @@ impl PricesCommand {
         }
 
         match optional_country {
-            Some(country) => {
+            Some(mut country) => {
+                if country.to_lowercase() == "uk" {
+                    country = "gb".to_string();
+                }
+
                 let filtered_country: Option<CountryPriceInfo>;
                 filtered_country = if country.len() <= 3 {
                     country_prices
@@ -279,7 +285,6 @@ impl PricesCommand {
 
                 match filtered_country {
                     None => {
-                        println!("No");
                         let supported_countries = country_prices.clone();
                         let similar_countries =
                             find_similar_countries(country.as_str(), &supported_countries);
@@ -298,7 +303,6 @@ impl PricesCommand {
                             ictx.handle
                                 .reply(Reply::new().embed(no_countries_embed).ephemeral())
                                 .await?;
-                            return Err(anyhow!("No similar countries"));
                         } else {
                             let mut embed_desc = format!(
                             "Out of `{}` countries supporting this product, `{}` matched your input of **{}**.\n\n",
@@ -327,26 +331,26 @@ impl PricesCommand {
                             ictx.handle
                                 .reply(Reply::new().embed(similar_countries_embed))
                                 .await?;
-
-                            return Ok(());
                         }
                     }
                     Some(country_price) => {
+                        let price_str = if country_price.price == country_price.low_price {
+                            format!(" is `${:.2}`", country_price.price)
+                        } else {
+                            format!(" can range from `${:.2}` - `${:.2}`", country_price.low_price, country_price.price)
+                        };
+
                         let price_embed = EmbedBuilder::new()
                             .title("Success")
                             .color(ictx.ctx.config.success_color)
                             .description(format!(
-                            "The price for a number from **{}** for the service **{}** can range from `${:.2}` - `${:.2}`",
-                            country_price.name,
-                            service,
-                            country_price.low_price * ictx.ctx.config.price_multiplier,
-                            country_price.price * ictx.ctx.config.price_multiplier,
-                        ))
+                                "The price for a number from **{}** for the service **{}**", 
+                                country_price.name, 
+                                service) + price_str.as_str()) 
                             .validate()?
                             .build();
 
                         ictx.handle.reply(Reply::new().embed(price_embed)).await?;
-                        return Ok(());
                     }
                 }
             }
@@ -359,7 +363,7 @@ impl PricesCommand {
                         format!("Here are the `{}` cheapest countries that are supported by the **{}** service.",
                             if country_prices.len() >= 25 { 25 } else { country_prices.len() }, 
                             service
-                        ) + " Country information is displayed in the following format: `{price} | {success_rate}`"
+                        ) + " Country information is displayed in the following format:\n`{price} | {success_rate}`"
                     );
 
                 for info in country_prices.iter().take(25) {
@@ -374,8 +378,8 @@ impl PricesCommand {
                             .embed(price_embed.validate()?.build()),
                     )
                     .await?;
-                return Ok(());
             }
         }
+        Ok(())
     }
 }

@@ -61,7 +61,8 @@ impl Context {
         };
 
         if let Err(err) = ctx.handle().await {
-            tracing::error!("Error handling interaction:\n {}", err.backtrace());
+            tracing::error!("Interaction handler panicked with error message: {}\nSee the backtrace below for more information", err);
+            println!("{}", err.backtrace());
         }
     }
 }
