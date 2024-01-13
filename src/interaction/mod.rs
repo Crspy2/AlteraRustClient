@@ -10,6 +10,7 @@ use crate::{Context, Error};
 
 mod adminbal;
 mod search;
+mod userdata;
 
 #[derive(Debug)]
 struct InteractionContext<'ctx> {
@@ -25,6 +26,7 @@ impl<'ctx> InteractionContext<'ctx> {
         match self.interaction.name().ok()? {
             adminbal::AdminBalCommand::NAME => self.handle_adminbal_command().await,
             search::SearchCommand::NAME => self.handle_search_command().await,
+            userdata::UserDataCommand::NAME => self.handle_user_data_command().await,
             _ => Err(Error::UnknownInteraction(self.interaction).into()),
         }
     }
@@ -35,6 +37,7 @@ impl Context {
         let commands = [
             adminbal::AdminBalCommand::create_command().into(),
             search::SearchCommand::create_command().into(),
+            userdata::UserDataCommand::create_command().into(),
         ];
 
         self.bot

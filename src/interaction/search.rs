@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
 use sparkle_convenience::reply::Reply;
 use std::mem;
-use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_interactions::command::{CommandModel, CreateCommand, CommandOption, CreateOption};
 use twilight_model::application::interaction::InteractionData;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
@@ -10,7 +10,7 @@ use crate::logic::{find_similar_countries, find_similar_services, is_service_bla
 use crate::sms::get_country_prices::CountryPriceInfo;
 
 #[derive(CommandModel, CreateCommand, Debug)]
-#[command(name = "search", desc = "Search our database for information")]
+#[command(name = "search", desc = "Search our database for information", dm_permission = false)]
 pub enum SearchCommand {
     #[command(name = "services")]
     Services(ServicesCommand),
@@ -42,7 +42,7 @@ impl InteractionContext<'_> {
 }
 
 #[derive(CommandModel, CreateCommand, Debug)]
-#[command(name = "services", desc = "search the suppored services for a service")]
+#[command(name = "services", desc = "search the suppored services for a service", dm_permission = false)]
 pub struct ServicesCommand {
     #[command(desc = "the service to search for", min_length = 2)]
     service: String,
@@ -141,11 +141,22 @@ impl ServicesCommand {
     }
 }
 
+
+#[derive(Clone, Copy, Debug, CommandOption, CreateOption)]
+enum SortByOption {
+    #[option(name = "price", value = "price")]
+    Price,
+    #[option(name = "success_rate", value = "success_rate")]
+    SuccessRate,
+}
+
 #[derive(CommandModel, CreateCommand, Debug)]
-#[command(name = "prices", desc = "Search for the price of a number")]
+#[command(name = "prices", desc = "Search for the price of a number", dm_permission = false)]
 pub struct PricesCommand {
     #[command(desc = "the service to get the prices of", min_length = 2)]
     service: String,
+    #[command(desc = "how to sort the countries that support the specified service")]
+    sort_by: Option<SortByOption>,
     #[command(
         desc = "if you only want the price for one country, specify it here",
         min_length = 2
@@ -165,8 +176,28 @@ impl PricesCommand {
             .get_country_prices(service.as_str())
             .await
             .unwrap_or([].to_vec());
-
-        country_prices.sort_by(|a, b| a.low_price.partial_cmp(&b.price).unwrap());
+        
+        let sort_by_method: SortByOption = self.sort_by.unwrap_or(SortByOption::Price);
+        match sort_by_method {
+            SortByOption::Price => {
+                country_prices.sort_by(|a, b| {
+                    match a.low_price.partial_cmp(&b.low_price) {
+                        Some(std::cmp::Ordering::Equal) => b.success_rate.partial_cmp(&a.success_rate),
+                        other => other,
+                    }.unwrap()
+                });
+                // country_prices.sort_by(|a, b| a.low_price.partial_cmp(&b.low_price).unwrap());
+            },
+            SortByOption::SuccessRate => { 
+                country_prices.sort_by(|a, b| {
+                    match b.success_rate.partial_cmp(&a.success_rate) {
+                        Some(std::cmp::Ordering::Equal) => a.low_price.partial_cmp(&b.low_price),
+                        other => other,
+                    }.unwrap()
+                });
+                // country_prices.sort_by(|a, b| b.success_rate.partial_cmp(&a.success_rate).unwrap());
+            }
+        } 
 
         // If service is invalid and request for prices fails
         if country_prices.is_empty() {
@@ -320,20 +351,21 @@ impl PricesCommand {
                 }
             }
             None => {
+                
                 let mut price_embed = EmbedBuilder::new()
                     .title("Success")
                     .color(ictx.ctx.config.success_color)
                     .description(
-                        format!("Here are the `{}` cheapest countries that are supported by the **{}** service",
+                        format!("Here are the `{}` cheapest countries that are supported by the **{}** service.",
                             if country_prices.len() >= 25 { 25 } else { country_prices.len() }, 
                             service
-                        )
+                        ) + "All countries supported are formatted the following way: ```\n{country_name}  {country_flag}\n{country_price} | {country_success_rate}\n```"
                     );
 
                 for info in country_prices.iter().take(25) {
                     // price_embed = price_embed.clone().field(
                     //     EmbedFieldBuilder::new(format!("{}  :flag_{}:", info.name, info.iso.to_lowercase()), format!("`${:.2}`", info.low_price * ictx.ctx.config.price_multiplier));
-                    price_embed = price_embed.clone().field(EmbedFieldBuilder::new(format!("{}  :flag_{}:", info.name, info.iso.to_lowercase()), format!("`${:.2}` | `{}%` success rate", info.low_price * ictx.ctx.config.price_multiplier, info.success_rate )).inline());
+                    price_embed = price_embed.clone().field(EmbedFieldBuilder::new(format!("{}  :flag_{}:", info.name, info.iso.to_lowercase()), format!("`${:.2}` | `{}%`", info.low_price * ictx.ctx.config.price_multiplier, info.success_rate )).inline());
                 }
 
                 ictx.handle

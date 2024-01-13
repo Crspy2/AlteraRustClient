@@ -46,11 +46,3 @@ where
     let s: String = Deserialize::deserialize(deserializer)?;
     f32::from_str(&s).map_err(serde::de::Error::custom)
 }
-
-fn deserialize_int<'de, D>(deserializer: D) -> Result<i16, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s: String = Deserialize::deserialize(deserializer)?;
-    i16::from_str(&s).map_err(serde::de::Error::custom)
-}

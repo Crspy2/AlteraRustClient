@@ -1,11 +1,20 @@
 use sparkle_convenience::reply::Reply;
 use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use super::InteractionContext;
 
+fn default_permissions() -> Permissions {
+    Permissions::MANAGE_GUILD
+}
+
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "adminbal", desc = "Get the total bot balance")]
+#[command(
+    name = "adminbal",
+    desc = "Get the total bot balance",
+    default_permissions = "default_permissions"
+)]
 pub struct AdminBalCommand;
 
 impl InteractionContext<'_> {
