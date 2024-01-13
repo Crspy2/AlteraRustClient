@@ -9,6 +9,7 @@ use twilight_model::{
     gateway::{event::Event, Intents},
 };
 
+mod api;
 mod interaction;
 mod logic;
 mod sms;
