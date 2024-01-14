@@ -119,7 +119,6 @@ pub fn is_service_blacklisted(service: &str) -> bool {
         "SwissBorg",
         "SwitchHere",
         "tala",
-        "T‚o taxi",
         "Tenx",
         "The Change",
         "Tikki",
@@ -182,7 +181,7 @@ pub fn find_similar_services(
         }
         let similarity_score = fuzz::ratio(
             &desired_service.to_lowercase(),
-            &service.name.to_lowercase().replace("‚", ","),
+            &service.name.to_lowercase(),
         );
 
         if similarity_score == 100 {
