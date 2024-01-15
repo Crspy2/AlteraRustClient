@@ -74,7 +74,7 @@ impl InteractionContext<'_> {
                     ))
                     .field(EmbedFieldBuilder::new(
                         "User Balance:",
-                        format!("`${:.2}`", (data.balance / 100) as f32),
+                        format!("`${:.2}`", (data.balance as f32) / 100.00),
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Last Deposit:",
