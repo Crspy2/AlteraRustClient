@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{ApiResponseError, SmsClient, API_URL};
+use super::{SMSResponseError, SmsClient, API_URL};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ServiceResponse {
@@ -11,7 +11,7 @@ pub struct ServiceResponse {
 }
 
 impl SmsClient {
-    pub async fn get_service_list(self) -> Result<Vec<ServiceResponse>, ApiResponseError> {
+    pub async fn get_service_list(self) -> Result<Vec<ServiceResponse>, SMSResponseError> {
         let request = self
             .client
             .post(format!("{}/service/retrieve_all", API_URL))
@@ -23,7 +23,7 @@ impl SmsClient {
             let service_info = request.json::<Vec<ServiceResponse>>().await.unwrap();
             Ok(service_info)
         } else {
-            let error_info = request.json::<ApiResponseError>().await.unwrap();
+            let error_info = request.json::<SMSResponseError>().await.unwrap();
             Err(error_info)
         }
     }

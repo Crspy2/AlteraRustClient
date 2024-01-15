@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{ApiResponseError, SmsClient, API_URL};
+use super::{SMSResponseError, SmsClient, API_URL};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BalanceResponseType {
@@ -8,7 +8,7 @@ pub struct BalanceResponseType {
 }
 
 impl SmsClient {
-    pub async fn get_api_balance(self) -> Result<f32, ApiResponseError> {
+    pub async fn get_api_balance(self) -> Result<f32, SMSResponseError> {
         let request = self
             .client
             .post(format!("{}/request/balance", API_URL))
@@ -25,7 +25,7 @@ impl SmsClient {
             let balance = balance_info.balance.parse::<f32>().unwrap();
             return Ok(balance);
         } else {
-            let error_info = request.json::<ApiResponseError>().await.unwrap();
+            let error_info = request.json::<SMSResponseError>().await.unwrap();
             return Err(error_info);
         }
     }

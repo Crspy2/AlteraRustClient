@@ -24,7 +24,7 @@ pub struct ApiErrorInfo {
     pub description: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ApiResponseError {
+pub struct SMSResponseError {
     pub success: i8,
     pub errors: Vec<ApiErrorInfo>,
 }
@@ -39,7 +39,7 @@ impl SmsClient {
     }
 }
 
-fn deserialize_float<'de, D>(deserializer: D) -> Result<f32, D::Error>
+fn deserialize_to_float<'de, D>(deserializer: D) -> Result<f32, D::Error>
 where
     D: Deserializer<'de>,
 {
