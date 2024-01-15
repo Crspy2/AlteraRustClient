@@ -13,6 +13,20 @@ pub struct ApiResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Number {
+    #[serde(rename = "Number")]
+    pub number: String,
+    #[serde(rename = "Service")]
+    pub service: String,
+    #[serde(rename = "Country")]
+    pub country: String,
+    #[serde(rename = "Price")]
+    pub price: i32,
+    #[serde(rename = "OrderID")]
+    pub order_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     #[serde(rename = "Balance")]
     pub balance: i32,
@@ -34,6 +48,10 @@ pub struct User {
     pub role: u8,
     #[serde(rename = "Deposits")]
     pub deposits: Vec<Value>,
+    #[serde(rename = "Numbers")]
+    pub numbers: Vec<Number>,
+    #[serde(rename = "Token")]
+    pub token: String,
 }
 
 pub async fn get_user_data(user_id: Id<UserMarker>) -> Result<User, ApiResponse> {
@@ -53,8 +71,46 @@ pub async fn get_user_data(user_id: Id<UserMarker>) -> Result<User, ApiResponse>
         .unwrap();
 
     if request.success {
-        let user_info: User = serde_json::from_value(request.resource).unwrap();
-        return Ok(user_info);
+        let user_info: User = serde_json::from_value(request.resource.clone()).unwrap();
+        Ok(user_info)
+    } else {
+        Err(request)
+    }
+}
+
+pub async fn post_user_number(
+    number: &str,
+    service: &str,
+    country: &str,
+    price: i32,
+    order_id: &str,
+    user_id: u32,
+) -> Result<ApiResponse, ApiResponse> {
+    let client = reqwest::Client::new();
+
+    let request = client
+        .post(format!("{}/user/numbers", BASE_URL))
+        .header(
+            reqwest::header::AUTHORIZATION,
+            env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
+        )
+        .json(&serde_json::json!({
+            "number": number,
+            "service": service,
+            "country": country,
+            "price": price,
+            "order_id": order_id,
+            "user_id": user_id,
+        }))
+        .send()
+        .await
+        .unwrap()
+        .json::<ApiResponse>()
+        .await
+        .unwrap();
+
+    if request.success {
+        return Ok(request);
     } else {
         return Err(request);
     }
