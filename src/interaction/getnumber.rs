@@ -29,7 +29,7 @@ impl InteractionContext<'_> {
         )?;
 
         let service = options.service;
-        let country = options.country.unwrap_or(String::new());
+        let country = options.country.unwrap_or("gb".to_string());
 
         let country_prices = self
             .ctx
