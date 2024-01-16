@@ -11,7 +11,8 @@ pub struct SmsOrderInfo {
     #[serde(deserialize_with = "deserialize_to_float")]
     pub cost: f32,
     pub country: String,
-    pub expires_in: i64,
+    pub expires_in: i16,
+    pub expiration: i64,
     pub message: String,
     pub number: i64,
     pub order_id: String,

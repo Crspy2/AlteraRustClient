@@ -85,7 +85,7 @@ pub async fn post_user_number(
     price: i32,
     order_id: &str,
     user_id: u32,
-) -> Result<ApiResponse, ApiResponse> {
+) -> Result<(), ApiResponse> {
     let client = reqwest::Client::new();
 
     let request = client
@@ -110,7 +110,7 @@ pub async fn post_user_number(
         .unwrap();
 
     if request.success {
-        return Ok(request);
+        Ok(())
     } else {
         return Err(request);
     }

@@ -10,6 +10,7 @@ use crate::{Context, Error};
 
 mod adminbal;
 mod balance;
+mod getnumber;
 mod search;
 mod userdata;
 
@@ -29,6 +30,7 @@ impl<'ctx> InteractionContext<'ctx> {
             balance::BalanceCommand::NAME => self.handle_balance_command().await,
             search::SearchCommand::NAME => self.handle_search_command().await,
             userdata::UserDataCommand::NAME => self.handle_user_data_command().await,
+            getnumber::GetNumberCommand::NAME => self.handle_getnumber_command().await,
             _ => Err(Error::UnknownInteraction(self.interaction).into()),
         }
     }
@@ -41,6 +43,7 @@ impl Context {
             balance::BalanceCommand::create_command().into(),
             search::SearchCommand::create_command().into(),
             userdata::UserDataCommand::create_command().into(),
+            getnumber::GetNumberCommand::create_command().into(),
         ];
 
         self.bot

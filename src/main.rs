@@ -7,6 +7,7 @@ use twilight_http as _;
 use twilight_model::{
     application::interaction::Interaction,
     gateway::{event::Event, Intents},
+    id::{marker::ChannelMarker, Id},
 };
 
 mod api;
@@ -23,6 +24,7 @@ pub enum Error {
 #[derive(Debug)]
 struct Config {
     debug_scope: u64,
+    log_channel: Id<ChannelMarker>,
     price_multiplier: f32,
     success_color: u32,
     error_color: u32,
@@ -59,7 +61,8 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing::info!("Connected as {}", bot.user.name);
 
     let config = Config {
-        debug_scope: env::var("DEBUG_SCOPE")?.parse().unwrap(),
+        debug_scope: env::var("DEBUG_SCOPE")?.parse()?,
+        log_channel: Id::new(env::var("LOG_CHANNEL")?.parse()?),
         success_color: 0x65C97A,
         error_color: 0xE85041,
         price_multiplier: 10.0,
