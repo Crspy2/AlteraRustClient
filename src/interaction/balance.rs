@@ -34,7 +34,7 @@ impl InteractionContext<'_> {
                     .title("Success")
                     .color(self.ctx.config.success_color)
                     .description(format!(
-                        "Your balance is `${:.2}`",
+                        "Your balance is `${:.2} USD`",
                         (data.balance as f32) / 100.00
                     ))
                     .validate()?
