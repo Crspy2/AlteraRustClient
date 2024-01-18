@@ -13,6 +13,7 @@ mod balance;
 mod getnumber;
 mod search;
 mod userdata;
+mod checksms;
 
 #[derive(Debug)]
 struct InteractionContext<'ctx> {
@@ -31,6 +32,7 @@ impl<'ctx> InteractionContext<'ctx> {
             search::SearchCommand::NAME => self.handle_search_command().await,
             userdata::UserDataCommand::NAME => self.handle_user_data_command().await,
             getnumber::GetNumberCommand::NAME => self.handle_getnumber_command().await,
+            checksms::CheckSMSCommand::NAME => self.handle_checksms_command().await,
             _ => Err(Error::UnknownInteraction(self.interaction).into()),
         }
     }
@@ -44,12 +46,15 @@ impl Context {
             search::SearchCommand::create_command().into(),
             userdata::UserDataCommand::create_command().into(),
             getnumber::GetNumberCommand::create_command().into(),
+            checksms::CheckSMSCommand::create_command().into(),
         ];
 
         self.bot
             .interaction_client()
             .set_guild_commands(Id::new(self.config.debug_scope), &commands)
             .await?;
+
+        self.bot.interaction_client().set_global_commands(&commands).await?;
 
         tracing::info!("Created guild commands");
         Ok(())

@@ -4,11 +4,12 @@ use super::{SMSResponseError, SmsClient, API_URL};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CheckSMSResponse {
-    status: i8,
-    message: Option<String>,
-    resend: i8,
-    expiration: i64,
-    time_left: Option<i32>,
+    pub status: i8,
+    pub message: Option<String>,
+    pub resend: i8,
+    pub expiration: i64,
+    pub time_left: Option<i32>,
+    pub full_sms: String,
 }
 
 impl SmsClient {
