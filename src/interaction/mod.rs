@@ -54,9 +54,7 @@ impl Context {
             .set_guild_commands(Id::new(self.config.debug_scope), &commands)
             .await?;
 
-        self.bot.interaction_client().set_global_commands(&commands).await?;
-
-        tracing::info!("Created guild commands");
+        tracing::info!("Created slash commands");
         Ok(())
     }
 

@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::sms::SMSResponseError;
-
-use super::{deserialize_to_float, ApiErrorInfo, SmsClient, API_URL};
+use super::{deserialize_to_float, SmsClient, API_URL};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SmsOrderInfo {
@@ -22,12 +20,20 @@ pub struct SmsOrderInfo {
     pub success: i8,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SMSOrderError {
+    pub success: u8,
+    pub message: String,
+    #[serde(rename = "type")]
+    pub error_type: String,
+}
+
 impl SmsClient {
     pub async fn create_sms_order(
         self,
         service: &str,
         country: &str,
-    ) -> Result<SmsOrderInfo, SMSResponseError> {
+    ) -> Result<SmsOrderInfo, SMSOrderError> {
         let request = self
             .client
             .post(format!("{}/purchase/sms", API_URL))
@@ -48,24 +54,8 @@ impl SmsClient {
             let order_info = request.json::<SmsOrderInfo>().await.unwrap();
             Ok(order_info)
         } else {
-            let error = request.json::<SMSResponseError>().await;
-
-            match error {
-                Ok(info) => return Err(info),
-                Err(_) => {
-                    return Err(SMSResponseError {
-                        success: 0,
-                        errors: vec![ApiErrorInfo {
-                            message: "No numbers available at the moment, please try again later."
-                                .to_string(),
-                            description:
-                                "No numbers available at the moment, please try again later."
-                                    .to_string(),
-                            param: "pool".to_string(),
-                        }],
-                    })
-                }
-            };
+            let error = request.json::<SMSOrderError>().await.unwrap();
+            Err(error)
         }
     }
 }

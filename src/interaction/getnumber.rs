@@ -29,7 +29,7 @@ impl InteractionContext<'_> {
         )?;
 
         let service = options.service;
-        let country = options.country.unwrap_or("gb".to_string());
+        let country = options.country.unwrap_or(String::new());
 
         let country_prices = self
             .ctx
@@ -103,71 +103,90 @@ impl InteractionContext<'_> {
 
             return Ok(());
         }
+        
+        let number_info = self
+            .ctx
+            .sms
+            .clone()
+            .create_sms_order(&service, &country)
+            .await;
 
-        let filtered_country: Option<CountryPriceInfo>;
-        filtered_country = if country.len() <= 3 {
-            country_prices
-                .iter()
-                .find(|c| c.iso.to_lowercase() == country.to_lowercase())
-                .cloned()
-        } else {
-            country_prices
-                .iter()
-                .find(|c| c.name.to_lowercase() == country.to_lowercase())
-                .cloned()
-        };
-
-        match filtered_country {
-            None => {
-                let supported_countries = country_prices.clone();
-                let similar_countries =
-                    find_similar_countries(country.as_str(), &supported_countries);
-
-                if similar_countries.is_empty() {
-                    let no_countries_embed = EmbedBuilder::new()
+        match number_info {
+            Err(err) => {
+                tracing::error!("{:#?}", err);
+                if err.error_type == "COUNTRY_NOT_AVAILABLE_FOR_SERVICE" {
+                    let supported_countries = country_prices.clone();
+                    let similar_countries =
+                        find_similar_countries(country.as_str(), &supported_countries);
+    
+                    if similar_countries.is_empty() {
+                        let no_countries_embed = EmbedBuilder::new()
+                            .title("Error")
+                            .color(self.ctx.config.error_color)
+                            .description(format!(
+                                "No countries similar to **{}** could be found",
+                                country
+                            ))
+                            .validate()?
+                            .build();
+    
+                        self.handle
+                            .reply(Reply::new().embed(no_countries_embed).ephemeral())
+                            .await?;
+                    } else {
+                        let mut embed_desc = format!(
+                            "Out of `{}` countries supporting this product, `{}` matched your input of **{}**.\n\n",
+                            supported_countries.len(),
+                            similar_countries.len(),
+                            country
+                        );
+    
+                        for (i, c) in similar_countries.iter().enumerate() {
+                            embed_desc += format!(
+                                "**{}:** {} | `{}%`\n",
+                                i + 1,
+                                c.country_info.name,
+                                c.similarity_score
+                            )
+                            .as_str();
+                        }
+    
+                        let similar_countries_embed = EmbedBuilder::new()
+                            .title("Success")
+                            .color(self.ctx.config.success_color)
+                            .description(embed_desc)
+                            .validate()?
+                            .build();
+    
+                        self.handle
+                            .reply(Reply::new().embed(similar_countries_embed))
+                            .await?;
+                    }
+                } else if err.error_type == "OUT_OF_STOCK" {
+                    let invalid_response_embed = EmbedBuilder::new()
                         .title("Error")
                         .color(self.ctx.config.error_color)
-                        .description(format!(
-                            "No countries similar to **{}** could be found",
-                            country
-                        ))
+                        .description("We are currently out of stock of numbers from the country you tried to order. Please try a different country or try again later!")
                         .validate()?
                         .build();
 
                     self.handle
-                        .reply(Reply::new().embed(no_countries_embed).ephemeral())
+                        .reply(Reply::new().embed(invalid_response_embed).ephemeral())
                         .await?;
                 } else {
-                    let mut embed_desc = format!(
-                        "Out of `{}` countries supporting this product, `{}` matched your input of **{}**.\n\n",
-                        supported_countries.len(),
-                        similar_countries.len(),
-                        country
-                    );
-
-                    for (i, c) in similar_countries.iter().enumerate() {
-                        embed_desc += format!(
-                            "**{}:** {} | `{}%`\n",
-                            i + 1,
-                            c.country_info.name,
-                            c.similarity_score
-                        )
-                        .as_str();
-                    }
-
-                    let similar_countries_embed = EmbedBuilder::new()
-                        .title("Success")
-                        .color(self.ctx.config.success_color)
-                        .description(embed_desc)
+                    let invalid_response_embed = EmbedBuilder::new()
+                        .title("Error")
+                        .color(self.ctx.config.error_color)
+                        .description("An error occurred while processing your request. Please try again later.")
                         .validate()?
                         .build();
 
                     self.handle
-                        .reply(Reply::new().embed(similar_countries_embed))
+                        .reply(Reply::new().embed(invalid_response_embed).ephemeral())
                         .await?;
                 }
             }
-            Some(country_price_info) => {
+            Ok(info) => {
                 let user_data_request = get_user_data(self.interaction.author_id().unwrap())
                     .await;
 
@@ -186,135 +205,115 @@ impl InteractionContext<'_> {
 
                 let user_data = user_data_request.unwrap();
 
-                if user_data.balance
-                    < (country_price_info.price * 100.00 * self.ctx.config.price_multiplier) as i32
-                {
-                    let broke_embed = EmbedBuilder::new()
+                if user_data.balance < (info.cost * 100.00 * self.ctx.config.price_multiplier) as i32 {
+                    let insufficient_funds_embed = EmbedBuilder::new()
                         .title("Error")
                         .color(self.ctx.config.error_color)
-                        .description("Your balance is too low to make this transaction")
+                        .description(format!("You do not have enough funds to purchase this number. Your balance is `${:.2} USD`", (user_data.balance as f32) / 100.00))
                         .validate()?
                         .build();
 
-                    self.handle
-                        .reply(Reply::new().embed(broke_embed).ephemeral())
-                        .await?;
+                    self.handle.reply(Reply::new().embed(insufficient_funds_embed).ephemeral()).await?;
 
-                    return Ok(());
+                    return Ok(())
                 }
 
-                let number_info = self
-                    .ctx
-                    .sms
-                    .clone()
-                    .create_sms_order(&service, &country)
-                    .await;
+                let country_price_info: CountryPriceInfo = country_prices
+                .iter()
+                .find(|c| c.name.to_lowercase() == info.country.to_lowercase())
+                .cloned()
+                .unwrap();
 
-                match number_info {
+                let sms_number = post_user_number(
+                    &info.number.to_string(),
+                    &info.service,
+                    &info.country,
+                    (info.cost * 100.00 * self.ctx.config.price_multiplier) as i32,
+                    &info.order_id,
+                    user_data.id,
+                )
+                .await;
+
+                match sms_number {
                     Err(err) => {
                         tracing::error!("{:#?}", err);
-                        let invalid_response_embed = EmbedBuilder::new()
+                        let error_embed = EmbedBuilder::new()
                             .title("Error")
                             .color(self.ctx.config.error_color)
-                            .description("We are currently out of stock of numbers from the country you tried to order. Please try a different country or try again later!")
+                            .description("An error occurred while processing your request. Please try again later.")
                             .validate()?
                             .build();
 
                         self.handle
-                            .reply(Reply::new().embed(invalid_response_embed).ephemeral())
+                            .reply(Reply::new().embed(error_embed).ephemeral())
                             .await?;
                     }
-                    Ok(info) => {
-                        let sms_number = post_user_number(
-                            &info.number.to_string(),
-                            &info.service,
-                            &info.country,
-                            (info.cost * 100.00 * self.ctx.config.price_multiplier) as i32,
-                            &info.order_id,
-                            user_data.id,
-                        )
-                        .await;
+                    Ok(_) => {
+                        let log_embed = EmbedBuilder::new()
+                            .title("Number Generated")
+                            .color(self.ctx.config.success_color)
+                            .description(format!(
+                                "**@{}** | `{}` has just generated a number",
+                                self.interaction.author().unwrap().name,
+                                self.interaction.author_id().unwrap()
+                            ))
+                            .field(
+                                EmbedFieldBuilder::new("Service:", &info.service).inline(),
+                            )
+                            .field(
+                                EmbedFieldBuilder::new(
+                                    "Country:",
+                                    format!(
+                                        "{}  :flag_{}:",
+                                        &info.country,
+                                        &country_price_info.iso.to_lowercase()
+                                    ),
+                                )
+                                .inline(),
+                            )
+                            .field(
+                                EmbedFieldBuilder::new(
+                                    "Message rate:",
+                                    format!(
+                                        "`${:.2} / sms`",
+                                        &info.cost * self.ctx.config.price_multiplier
+                                    ),
+                                )
+                                .inline(),
+                            )
+                            .validate()?
+                            .build();
 
-                        match sms_number {
-                            Err(err) => {
-                                tracing::error!("{:#?}", err);
-                                let error_embed = EmbedBuilder::new()
-                                    .title("Error")
-                                    .color(self.ctx.config.error_color)
-                                    .description("An error occurred while processing your request. Please try again later.")
-                                    .validate()?
-                                    .build();
+                        let _ = self.ctx.bot.http.create_message(self.ctx.config.log_channel).embeds(&vec![log_embed]).unwrap();
 
-                                self.handle
-                                    .reply(Reply::new().embed(error_embed).ephemeral())
-                                    .await?;
-                            }
-                            Ok(_) => {
-                                let log_embed = EmbedBuilder::new()
-                                    .title("Number Generated")
-                                    .color(self.ctx.config.success_color)
-                                    .description(format!(
-                                        "**@{}** | `{}` has just generated a number",
-                                        self.interaction.author().unwrap().name,
-                                        self.interaction.author_id().unwrap()
-                                    ))
-                                    .field(
-                                        EmbedFieldBuilder::new("Service:", &info.service).inline(),
-                                    )
-                                    .field(
-                                        EmbedFieldBuilder::new(
-                                            "Country:",
-                                            format!(
-                                                "{}  :flag_{}:",
-                                                &info.country,
-                                                &country_price_info.iso.to_lowercase()
-                                            ),
-                                        )
-                                        .inline(),
-                                    )
-                                    .field(
-                                        EmbedFieldBuilder::new(
-                                            "Message rate:",
-                                            format!(
-                                                "`${:.2} / sms`",
-                                                &info.cost * self.ctx.config.price_multiplier
-                                            ),
-                                        )
-                                        .inline(),
-                                    )
-                                    .validate()?
-                                    .build();
+                        let number_embed = EmbedBuilder::new()
+                            .title("Success")
+                            .color(self.ctx.config.success_color)
+                            .description(format!(
+                                    "You will only be charged once a message has been received.```py\n+{} {}\n```",
+                                    &info.area_code, &info.phonenumber))
+                            .field(EmbedFieldBuilder::new("Service:", 
+                                    &info.service).inline())
+                            .field(EmbedFieldBuilder::new("Country:", format!("{}  :flag_{}:", 
+                                        &info.country, &country_price_info.iso.to_lowercase())).inline())
+                            .field(EmbedFieldBuilder::new("Message rate:", format!("`${:.2} / sms`",
+                                        &info.cost * self.ctx.config.price_multiplier)).inline())
+                            .field(EmbedFieldBuilder::new("Number:", &info.number.to_string()).inline())
+                            .field(EmbedFieldBuilder::new("Expires:", format!("<t:{}:R>", &info.expiration)).inline())
+                            .field(EmbedFieldBuilder::new("Balance:", format!("`${:.2} USD`", 
+                                        (user_data.balance as f32) / 100.00)).inline()) 
+                            .validate()?
+                            .build();
 
-                                let _ = self.ctx.bot.http.create_message(self.ctx.config.log_channel).embeds(&vec![log_embed]);
-
-                                let number_embed = EmbedBuilder::new()
-                                    .title("Success")
-                                    .color(self.ctx.config.success_color)
-                                    .description(format!(
-                                            "You will only be charged once a message has been received.```py\n+{} {}\n```",
-                                            &info.area_code, &info.phonenumber))
-                                    .field(EmbedFieldBuilder::new("Service:", 
-                                            &info.service).inline())
-                                    .field(EmbedFieldBuilder::new("Country:", format!("{}  :flag_{}:", 
-                                                &info.country, &country_price_info.iso.to_lowercase())).inline())
-                                    .field(EmbedFieldBuilder::new("Message rate:", format!("`${:.2} / sms`",
-                                                &info.cost * self.ctx.config.price_multiplier)).inline())
-                                    .field(EmbedFieldBuilder::new("Number:", &info.number.to_string()).inline())
-                                    .field(EmbedFieldBuilder::new("Expires:", format!("<t:{}:R>", &info.expiration)).inline())
-                                    .field(EmbedFieldBuilder::new("Balance:", format!("`${:.2} USD`", 
-                                                (user_data.balance as f32) / 100.00)).inline()) 
-                                    .validate()?
-                                    .build();
-
-                                self.handle
-                                    .reply(Reply::new().embed(number_embed).ephemeral())
-                                    .await?;
-                            }
-                        }
+                        self.handle
+                            .reply(Reply::new().embed(number_embed).ephemeral())
+                            .await?;
                     }
                 }
             }
         }
+
+
         Ok(())
     }
 }
