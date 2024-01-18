@@ -80,7 +80,7 @@ impl InteractionContext<'_> {
                         let sms_code_embed = EmbedBuilder::new()
                             .title("Error")
                             .color(self.ctx.config.error_color)
-                            .description(format!("An error occured while trying to get the sms code for **{}**. Please try again later.", number.service))
+                            .description(format!("An error occured while trying to get the sms code for **{}**. Please try again later.", number.number))
                             .validate()?
                             .build();
 
@@ -133,8 +133,10 @@ impl InteractionContext<'_> {
                                     .color(self.ctx.config.success_color)
                                     .description(format!(
                                         "Incoming texts to +{}:\n```glsl\n{}\n```",
-                                        number.number, sms_code.full_sms
+                                        number.number, sms_code.full_sms.unwrap()
                                     ))
+                                    .field(EmbedFieldBuilder::new("SMS Code:", sms_code.sms.unwrap()).inline())
+                                    .field(EmbedFieldBuilder::new("Expires:", format!("<t:{}:R>", sms_code.expiration)).inline())
                                     .validate()?
                                     .build();
 
