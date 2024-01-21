@@ -1,4 +1,4 @@
-use crate::api::{get_user_data, update_user_balance};
+use crate::api::{get_user_data, mark_number_received, update_user_balance};
 use sparkle_convenience::reply::Reply;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
@@ -109,27 +109,42 @@ impl InteractionContext<'_> {
                                     .await?;
                             }
                             3 => {
-                                let balance_removal_success = update_user_balance(
-                                    user_data.id,
-                                    user_data.balance - number.price,
-                                )
-                                .await;
+                                if !number.received {
+                                    if let Err(err) = update_user_balance(
+                                        user_data.id,
+                                        user_data.balance - number.price,
+                                    )
+                                    .await
+                                    {
+                                        tracing::error!("{:#?}", err);
 
-                                if let Err(err) = balance_removal_success {
-                                    tracing::error!("{:#?}", err);
-
-                                    let sms_code_embed = EmbedBuilder::new()
+                                        let sms_code_embed = EmbedBuilder::new()
                                         .title("Error")
                                         .color(self.ctx.config.error_color)
                                         .description(format!("An error occured while processing your request. Please try again later."))
                                         .validate()?
                                         .build();
 
-                                    self.handle
-                                        .reply(Reply::new().embed(sms_code_embed).ephemeral())
-                                        .await?;
+                                        self.handle
+                                            .reply(Reply::new().embed(sms_code_embed).ephemeral())
+                                            .await?;
 
-                                    return Ok(());
+                                        return Ok(());
+                                    }
+
+                                    if let Err(err) =
+                                        mark_number_received(number.number.clone()).await
+                                    {
+                                        tracing::error!("{:#?}", err);
+
+                                        let db_err_embed = EmbedBuilder::new().title("Error").color(self.ctx.config.error_color).description("An error occured while processing your request. Please try again later.").validate()?.build();
+
+                                        self.handle
+                                            .reply(Reply::new().embed(db_err_embed).ephemeral())
+                                            .await?;
+
+                                        return Ok(());
+                                    }
                                 }
 
                                 let log_embed = EmbedBuilder::new()

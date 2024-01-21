@@ -24,6 +24,8 @@ pub struct Number {
     pub price: i32,
     #[serde(rename = "OrderID")]
     pub order_id: String,
+    #[serde(rename = "Received")]
+    pub received: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -126,6 +128,29 @@ pub async fn update_user_balance(user_id: u32, balance: i32) -> Result<(), ApiRe
             env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
         )
         .body(json!({"balance": balance}).to_string())
+        .send()
+        .await
+        .unwrap()
+        .json::<ApiResponse>()
+        .await
+        .unwrap();
+
+    if request.success {
+        Ok(())
+    } else {
+        Err(request)
+    }
+}
+
+pub async fn mark_number_received(number: String) -> Result<(), ApiResponse> {
+    let client = reqwest::Client::new();
+
+    let request = client
+        .put(format!("{}/user/numbers/{}/received", BASE_URL, number))
+        .header(
+            reqwest::header::AUTHORIZATION,
+            env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
+        )
         .send()
         .await
         .unwrap()
