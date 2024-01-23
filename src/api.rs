@@ -118,30 +118,6 @@ pub async fn post_user_number(
     }
 }
 
-pub async fn update_user_balance(user_id: u32, balance: i32) -> Result<(), ApiResponse> {
-    let client = reqwest::Client::new();
-
-    let request = client
-        .put(format!("{}/user/{}/update", BASE_URL, user_id))
-        .header(
-            reqwest::header::AUTHORIZATION,
-            env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
-        )
-        .body(json!({"balance": balance}).to_string())
-        .send()
-        .await
-        .unwrap()
-        .json::<ApiResponse>()
-        .await
-        .unwrap();
-
-    if request.success {
-        Ok(())
-    } else {
-        Err(request)
-    }
-}
-
 pub async fn mark_number_received(number: String) -> Result<(), ApiResponse> {
     let client = reqwest::Client::new();
 
