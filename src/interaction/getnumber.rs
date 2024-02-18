@@ -194,7 +194,7 @@ impl InteractionContext<'_> {
                     let no_user_embed = EmbedBuilder::new()
                         .title("Error")
                         .color(self.ctx.config.error_color)
-                        .description(format!("No user could be found for **@{}**", self.interaction.author().unwrap().name))
+                        .description(format!("No account could be found for **@{}**", self.interaction.author().unwrap().name))
                         .validate()?
                         .build();
 

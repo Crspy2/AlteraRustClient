@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::env;
 use twilight_model::id::{marker::UserMarker, Id};
 
-const BASE_URL: &str = "http://localhost:8080/api";
+const BASE_URL: &str = "https://api.alterasms.io";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ApiResponse {
@@ -63,7 +63,9 @@ pub async fn get_user_data(user_id: Id<UserMarker>) -> Result<User, ApiResponse>
         .get(format!("{}/user/discord/{}", BASE_URL, user_id))
         .header(
             reqwest::header::AUTHORIZATION,
-            env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
+            format!(
+              "Bearer {}",
+              env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()),
         )
         .send()
         .await
@@ -94,7 +96,9 @@ pub async fn post_user_number(
         .post(format!("{}/user/numbers", BASE_URL))
         .header(
             reqwest::header::AUTHORIZATION,
-            env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
+            format!(
+              "Bearer {}",
+              env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()),
         )
         .json(&serde_json::json!({
             "number": number,
@@ -125,7 +129,9 @@ pub async fn mark_number_received(number: String) -> Result<(), ApiResponse> {
         .put(format!("{}/user/numbers/{}/received", BASE_URL, number))
         .header(
             reqwest::header::AUTHORIZATION,
-            env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap(),
+            format!(
+              "Bearer {}",
+              env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()),
         )
         .send()
         .await
