@@ -1,4 +1,4 @@
-use crate::api::{get_user_data, mark_number_received, update_user_balance};
+use crate::api::{get_user_data, mark_number_received};
 use sparkle_convenience::reply::Reply;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
