@@ -1,8 +1,8 @@
 FROM rust:latest as builder
 WORKDIR /app/discord
 
-COPY Cargo.toml Cargo.lock ./
-COPY . .
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
 
 # This trick will cache your dependencies
 RUN cargo build --release
