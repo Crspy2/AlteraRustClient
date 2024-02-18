@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 sparkle-convenience = { version = "0.15" }
-twilight-http = { version = "0.15.4", default-features = false, features = ["decompression", "simd-json", "rustls-webpki-roots", "trust-dns"] }
-twilight-gateway = { version = "0.15", default-features = false, features = ["simd-json", "rustls-webpki-roots", "twilight-http", "zlib-simd"] }
+twilight-http = { version = "0.15.4", default-features = false, features = ["decompression", "rustls-webpki-roots", "trust-dns"] }
+twilight-gateway = { version = "0.15", default-features = false, features = ["rustls-webpki-roots", "twilight-http"] }
 twilight-model = "0.15"
 twilight-util = { version = "0.15", features = ["builder"] }
 twilight-interactions = "0.15"
