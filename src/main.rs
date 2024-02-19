@@ -48,9 +48,10 @@ impl Context {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-  println!("THE PROGRAM IS RUNNING");
+    if env::var("DEBUG_MODE").is_ok() {
+      dotenvy::dotenv()?;
+    }
     tracing_subscriber::fmt().pretty().init();
-    println!("TRACING LOADED");
 
     let (bot, mut shards) = Bot::new(
         env::var("DISCORD_TOKEN")?,
