@@ -48,7 +48,9 @@ impl Context {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    dotenvy::dotenv()?;
+    if env::var("DEBUG_MODE").is_ok() {
+      dotenvy::dotenv()?;
+    }
     tracing_subscriber::fmt().pretty().init();
 
     let (bot, mut shards) = Bot::new(
