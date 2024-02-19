@@ -17,10 +17,8 @@ RUN cargo build --release --bin altera_client
 
 FROM ubuntu:latest
 
-COPY --from=builder /app/target/release/altera_client /app/target/release/altera_client
-RUN chmod +x /app/target/release/altera_client
-
-ENV RUST_BACKTRACE=full
+COPY --from=builder /app/target/release/altera_client /app/altera_client
+RUN chmod +x /app/altera_client
 
 # Run your binary
-CMD ["/bin/bash"]
+CMD ["/app/altera_clientt"]
