@@ -24,4 +24,4 @@ COPY --from=builder /app/target/release/altera_client /app/altera_client
 RUN chmod +x /app/altera_client
 
 # Run your binary
-CMD ["/app/altera_clientt"]
+CMD ["/app/altera_client"]
