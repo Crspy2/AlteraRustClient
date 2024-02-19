@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     clang \
     libc6-dev \
+    ca-certificates \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .
