@@ -48,6 +48,7 @@ impl Context {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
+  println!("THE PROGRAM IS RUNNING");
     dotenvy::dotenv()?;
     tracing_subscriber::fmt().pretty().init();
 
