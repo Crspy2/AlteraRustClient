@@ -23,4 +23,4 @@ RUN chmod +x /app/target/release/altera_client
 ENV RUST_BACKTRACE=full
 
 # Run your binary
-CMD ["/app/target/release/altera_client"]
+CMD ["/bin/bash"]
