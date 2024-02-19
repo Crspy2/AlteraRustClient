@@ -49,8 +49,6 @@ impl Context {
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
   println!("THE PROGRAM IS RUNNING");
-    dotenvy::dotenv()?;
-    println!("LOADED ENVIRONMENT VARIABLES");
     tracing_subscriber::fmt().pretty().init();
     println!("TRACING LOADED");
 
