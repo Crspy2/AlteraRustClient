@@ -1,6 +1,7 @@
 use crate::api::{get_user_data, post_user_number};
 use crate::logic::{find_similar_countries, find_similar_services};
 use crate::sms::get_country_prices::CountryPriceInfo;
+use sparkle_convenience::interaction::DeferVisibility;
 use sparkle_convenience::{
     error::IntoError, interaction::extract::InteractionDataExt, reply::Reply,
 };
@@ -27,6 +28,8 @@ impl InteractionContext<'_> {
         let options = GetNumberCommand::from_interaction(
             self.interaction.data.clone().ok()?.command().ok()?.into(),
         )?;
+
+        self.handle.defer(DeferVisibility::Ephemeral).await.unwrap();
 
         let service = options.service;
         let country = options.country.unwrap_or(String::new());
