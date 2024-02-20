@@ -117,7 +117,7 @@ impl ServicesCommand {
 
                 for (i, s) in similar_services.iter().enumerate() {
                     embed_desc += format!(
-                        "**{}:** {} | `{}%`\n",
+                        "**{}:** {} | `{}%` similarity\n",
                         i + 1,
                         s.service_info.name,
                         s.similarity_score
@@ -243,7 +243,7 @@ impl PricesCommand {
 
             for (i, s) in similar_services.iter().enumerate() {
                 embed_desc += format!(
-                    "**{}:** {} | `{}%`\n",
+                    "**{}:** {} | `{}%` similarity\n",
                     i + 1,
                     s.service_info.name,
                     s.similarity_score
@@ -313,7 +313,7 @@ impl PricesCommand {
 
                             for (i, c) in similar_countries.iter().enumerate() {
                                 embed_desc += format!(
-                                    "**{}:** {} | `{}%`\n",
+                                    "**{}:** {} | `{}%` similarity\n",
                                     i + 1,
                                     c.country_info.name,
                                     c.similarity_score
