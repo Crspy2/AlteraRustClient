@@ -67,7 +67,7 @@ async fn main() -> Result<(), anyhow::Error> {
         log_channel: Id::new(env::var("LOG_CHANNEL")?.parse()?),
         success_color: 0x65C97A,
         error_color: 0xE85041,
-        price_multiplier: 10.0,
+        price_multiplier: env::var("PRICE_MULTIPLIER")?.parse()?,
     };
     let sms = SmsClient::new(env::var("API_KEY")?);
 
