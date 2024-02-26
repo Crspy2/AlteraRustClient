@@ -48,24 +48,23 @@ pub struct User {
     pub name: String,
     #[serde(rename = "Role")]
     pub role: u8,
-    #[serde(rename = "Deposits")]
-    pub deposits: Vec<Value>,
+    #[serde(rename = "Invoices")]
+    pub invoices: Vec<Value>,
     #[serde(rename = "Numbers")]
     pub numbers: Vec<Number>,
-    #[serde(rename = "Token")]
-    pub token: String,
 }
 
 pub async fn get_user_data(user_id: Id<UserMarker>) -> Result<User, ApiResponse> {
     let client = reqwest::Client::new();
-
+    println!("{:#?}", env::var("ADMIN_TOKEN").unwrap());
     let request = client
         .get(format!("{}/user/discord/{}", BASE_URL, user_id))
         .header(
             reqwest::header::AUTHORIZATION,
             format!(
-              "Bearer {}",
-              env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()),
+              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkaWQiOiIzODU1Njg4ODQ1MTE0NzM2NjQiLCJleHAiOjE3MTAxODA0NjgsInVpZCI6MX0.oyYpbpMw8YeJ5FQoE3Ii21EE6JyF4_KdmV89ygAC0ss",
+              // env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()
+            ),
         )
         .send()
         .await
@@ -93,7 +92,7 @@ pub async fn post_user_number(
     let client = reqwest::Client::new();
 
     let request = client
-        .post(format!("{}/user/numbers", BASE_URL))
+        .post(format!("{}/user/number", BASE_URL))
         .header(
             reqwest::header::AUTHORIZATION,
             format!(
@@ -126,7 +125,7 @@ pub async fn mark_number_received(number: String) -> Result<(), ApiResponse> {
     let client = reqwest::Client::new();
 
     let request = client
-        .put(format!("{}/user/numbers/{}/received", BASE_URL, number))
+        .put(format!("{}/user/number/{}/received", BASE_URL, number))
         .header(
             reqwest::header::AUTHORIZATION,
             format!(

@@ -88,7 +88,7 @@ impl InteractionContext<'_> {
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Number of Deposits",
-                        format!("`{}` deposits on record", data.deposits.len()),
+                        format!("`{}` deposits on record", data.invoices.len()),
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Role",

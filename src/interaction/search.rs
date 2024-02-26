@@ -335,9 +335,11 @@ impl PricesCommand {
                     }
                     Some(country_price) => {
                         let price_str = if country_price.price == country_price.low_price {
-                            format!(" is `${:.2}`", country_price.price)
+                            format!(" is `${:.2}`", country_price.price * ictx.ctx.config.price_multiplier)
                         } else {
-                            format!(" can range from `${:.2}` - `${:.2}`", country_price.low_price, country_price.price)
+                            format!(" can range from `${:.2}` - `${:.2}`", 
+                            country_price.low_price * ictx.ctx.config.price_multiplier, 
+                            country_price.price * ictx.ctx.config.price_multiplier)
                         };
 
                         let price_embed = EmbedBuilder::new()
