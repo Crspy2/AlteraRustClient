@@ -7,11 +7,22 @@ use twilight_model::guild::Permissions;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 use crate::api::get_user_data;
+use serde_json::Value;
 
 use super::InteractionContext;
 
 fn default_permissions() -> Permissions {
     return Permissions::VIEW_AUDIT_LOG;
+}
+
+fn filter_invoices_for_completed(values: Vec<Value>) -> Vec<Value> {
+  values.iter()
+      .filter(|value| match value {
+        Value::Object(obj) => obj.get("status").and_then(|v| v.as_str()) == Some("COMPLETED"),
+          _ => false,
+      })
+      .cloned()
+      .collect()
 }
 
 #[derive(CreateCommand, CommandModel, Debug)]
@@ -78,17 +89,21 @@ impl InteractionContext<'_> {
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Last Deposit:",
-                        format!(
+                        if filter_invoices_for_completed(data.invoices.clone()).len() == 0 {
+                          "`N/A`".to_string()
+                        } else {
+                          format!(
                             "<t:{}:f>",
                             chrono::DateTime::parse_from_rfc3339(&data.updated_at)
                                 .expect("Failed to parse datetime")
                                 .with_timezone(&chrono::Utc)
                                 .timestamp()
-                        ),
+                          )
+                        },
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Number of Deposits",
-                        format!("`{}` deposits on record", data.invoices.len()),
+                        format!("`{}` deposits on record", filter_invoices_for_completed(data.invoices.clone()).len()),
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Role",
