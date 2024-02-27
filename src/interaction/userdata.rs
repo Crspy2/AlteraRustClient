@@ -92,10 +92,12 @@ impl InteractionContext<'_> {
                     ))
                     .field(EmbedFieldBuilder::new(
                         "Role",
-                        if data.role == 1 {
+                        if data.role == 2 {
                             "<:moderator:1123391823885381762> **Admin**"
+                        } else if data.role == 1 {
+                            "<:bug:1123148520665391134> **Support**"
                         } else {
-                            "<:members:1123391833997852692> **User**"
+                          "<:members:1123391833997852692> **User**"
                         },
                     ))
                     .validate()?
