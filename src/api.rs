@@ -62,8 +62,8 @@ pub async fn get_user_data(user_id: Id<UserMarker>) -> Result<User, ApiResponse>
         .header(
             reqwest::header::AUTHORIZATION,
             format!(
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkaWQiOiIzODU1Njg4ODQ1MTE0NzM2NjQiLCJleHAiOjE3MTAxODA0NjgsInVpZCI6MX0.oyYpbpMw8YeJ5FQoE3Ii21EE6JyF4_KdmV89ygAC0ss",
-              // env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()
+              "Bearer {}",
+              env::var("ADMIN_TOKEN").unwrap().parse::<String>().unwrap()
             ),
         )
         .send()
