@@ -56,7 +56,6 @@ pub struct User {
 
 pub async fn get_user_data(user_id: Id<UserMarker>) -> Result<User, ApiResponse> {
     let client = reqwest::Client::new();
-    println!("{:#?}", env::var("ADMIN_TOKEN").unwrap());
     let request = client
         .get(format!("{}/user/discord/{}", BASE_URL, user_id))
         .header(

@@ -34,7 +34,6 @@ impl SmsClient {
             Ok(sms_info)
         } else {
             let info = request.json::<Value>().await.unwrap();
-            println!("{:#?}", info);
 
             let error_info = serde_json::from_value::<SMSResponseError>(info).unwrap();
             Err(error_info)
