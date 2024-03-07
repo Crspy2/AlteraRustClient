@@ -100,7 +100,7 @@ impl InteractionContext<'_> {
                                     .field(EmbedFieldBuilder::new("Still Waiting?", "If you requested an SMS code and you have not 
                                             received it, remember it can take up to 5 minutes to receive the SMS code. You will not be
                                             charged until you receive a message"))
-                                    .field(EmbedFieldBuilder::new("Expiration:", format!("<t:{}:R>", sms_code.expiration)))
+                                    .field(EmbedFieldBuilder::new("Number Expiration:", format!("<t:{}:R>", sms_code.expiration)))
                                     .validate()?
                                     .build();
 

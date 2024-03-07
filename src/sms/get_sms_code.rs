@@ -16,7 +16,6 @@ pub struct CheckSMSResponse {
 
 impl SmsClient {
     pub async fn get_sms_code(self, order_id: &str) -> Result<CheckSMSResponse, SMSResponseError> {
-        tracing::info!("{}", order_id);
         let request = self
             .client
             .post(format!("{}/sms/check", API_URL))
