@@ -111,7 +111,7 @@ impl InteractionContext<'_> {
                             3 => {
                                 if !number.received {
                                     if let Err(err) =
-                                        mark_number_received(number.number.clone()).await
+                                        mark_number_received(number.number.clone(), self.interaction.author_id().unwrap().to_string()).await
                                     {
                                         tracing::error!("{:#?}", err);
 

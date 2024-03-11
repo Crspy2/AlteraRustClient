@@ -120,11 +120,11 @@ pub async fn post_user_number(
     }
 }
 
-pub async fn mark_number_received(number: String) -> Result<(), ApiResponse> {
+pub async fn mark_number_received(number: String, discord_id: String) -> Result<(), ApiResponse> {
     let client = reqwest::Client::new();
 
     let request = client
-        .put(format!("{}/user/number/{}/received", BASE_URL, number))
+        .put(format!("{}/user/number/{}/received?discord_id={}", BASE_URL, number, discord_id))
         .header(
             reqwest::header::AUTHORIZATION,
             format!(
