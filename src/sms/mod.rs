@@ -8,7 +8,7 @@ pub mod get_country_prices;
 pub mod get_service_list;
 pub mod get_sms_code;
 
-const API_URL: &str = "https://api.smspool.net";
+const API_URL: &str = "....";
 
 #[derive(Debug, Clone)]
 
